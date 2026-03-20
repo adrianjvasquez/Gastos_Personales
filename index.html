@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Gastos Personales</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fa-solid fa-wallet"></i>
+            <h1>Mis Finanzas</h1>
+        </div>
+        <div class="nav-actions">
+            <button id="btn-export" class="btn btn-outline" title="Exportar CSV">
+                <i class="fa-solid fa-download"></i> <span class="hide-mobile">Exportar</span>
+            </button>
+            <button id="btn-theme" class="btn btn-icon" title="Cambiar Tema">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Dashboard Section -->
+        <section class="dashboard">
+            <div class="summary-cards">
+                <div class="card balance-card">
+                    <div class="card-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div class="card-info">
+                        <h3>Balance Total</h3>
+                        <p id="total-balance" class="amount">$0.00</p>
+                    </div>
+                </div>
+                <div class="card income-card">
+                    <div class="card-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div class="card-info">
+                        <h3>Ingresos</h3>
+                        <p id="total-income" class="amount pos">$0.00</p>
+                    </div>
+                </div>
+                <div class="card expense-card">
+                    <div class="card-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    <div class="card-info">
+                        <h3>Gastos</h3>
+                        <p id="total-expense" class="amount neg">$0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Filters -->
+            <div class="dashboard-filters">
+                <button class="btn btn-filter active" data-period="all">Todo</button>
+                <button class="btn btn-filter" data-period="month">Este Mes</button>
+                <button class="btn btn-filter" data-period="week">Esta Semana</button>
+                <button class="btn btn-filter" data-period="day">Hoy</button>
+            </div>
+
+            <!-- Charts Container -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Gastos por Categoría</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Ingresos vs Gastos</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transactions Section -->
+        <section class="transactions-section">
+            <div class="section-header">
+                <h2>Historial de Transacciones</h2>
+                <!-- Filters -->
+                <div class="filters">
+                    <select id="filter-type" class="form-input">
+                        <option value="all">Todos los tipos</option>
+                        <option value="income">Ingresos</option>
+                        <option value="expense">Gastos</option>
+                    </select>
+                    <select id="filter-category" class="form-input">
+                        <option value="all">Todas las categorías</option>
+                        <!-- Dynamic Categories here -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="transactions-list" id="transactions-list">
+                <!-- Transactions will be injected here via JS -->
+                <div class="empty-state">
+                    <i class="fa-solid fa-receipt"></i>
+                    <p>No hay transacciones registradas.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating Action Button -->
+    <button id="fab-add" class="fab" title="Agregar Transacción">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- Modal for Adding/Editing Transaction -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Nueva Transacción</h2>
+                <button id="close-modal" class="btn-icon"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="transaction-form">
+                <input type="hidden" id="tx-id">
+                
+                <div class="form-group type-toggle">
+                    <input type="radio" name="tx-type" id="type-expense" value="expense" checked>
+                    <label for="type-expense" class="toggle-btn expense-btn">Gasto</label>
+                    <input type="radio" name="tx-type" id="type-income" value="income">
+                    <label for="type-income" class="toggle-btn income-btn">Ingreso</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="tx-amount">Monto ($)</label>
+                    <input type="number" id="tx-amount" class="form-input" step="0.01" min="0.01" required placeholder="0.00">
+                </div>
+
+                <div class="form-group">
+                    <label for="tx-category">Categoría</label>
+                    <div class="category-wrapper">
+                        <select id="tx-category" class="form-input" required>
+                            <!-- Dynamic Categories -->
+                        </select>
+                        <button type="button" id="btn-new-category" class="btn btn-icon" title="Nueva Categoría">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tx-date">Fecha</label>
+                    <input type="date" id="tx-date" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tx-desc">Descripción (opcional)</label>
+                    <input type="text" id="tx-desc" class="form-input" placeholder="Ej: Compra en el supermercado">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btn-cancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="modules/storage.js"></script>
+    <script src="modules/categories.js"></script>
+    <script src="modules/transactions.js"></script>
+    <script src="modules/dashboard.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
